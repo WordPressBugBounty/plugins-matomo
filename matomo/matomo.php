@@ -4,10 +4,10 @@
  * Description: Privacy friendly, GDPR compliant and self-hosted. Matomo is the #1 Google Analytics alternative that gives you control of your data. Free and secure.
  * Author: Matomo
  * Author URI: https://matomo.org
- * Version: 5.1.3
+ * Version: 5.1.4
  * Domain Path: /languages
  * WC requires at least: 2.4.0
- * WC tested up to: 9.2.3
+ * WC tested up to: 9.3.3
  *
  * Matomo - free/libre analytics platform
  *
@@ -22,8 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // if accessed directly
 }
 
-load_plugin_textdomain( 'matomo', false, basename( dirname( __FILE__ ) ) . '/languages' );
-
 if ( ! defined( 'MATOMO_ANALYTICS_FILE' ) ) {
 	define( 'MATOMO_ANALYTICS_FILE', __FILE__ );
 }
@@ -36,6 +34,13 @@ $GLOBALS['MATOMO_PLUGINS_ENABLED'] = array();
 
 /** MATOMO_PLUGIN_FILES => used to check for updates etc */
 $GLOBALS['MATOMO_PLUGIN_FILES'] = array( MATOMO_ANALYTICS_FILE );
+
+add_action(
+	'init',
+	function () {
+		load_plugin_textdomain( 'matomo', false, basename( dirname( __FILE__ ) ) . '/languages' );
+	}
+);
 
 function matomo_has_compatible_content_dir() {
 	if ( ! empty( $_SERVER['MATOMO_WP_ROOT_PATH'] )
