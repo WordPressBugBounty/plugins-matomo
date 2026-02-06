@@ -105,7 +105,9 @@ abstract class API
      * @param $passwordConfirmation
      * @throws Exception
      */
-    protected function confirmCurrentUserPassword($passwordConfirmation)
+    protected function confirmCurrentUserPassword(
+#[\SensitiveParameter]
+$passwordConfirmation)
     {
         $loginCurrentUser = Piwik::getCurrentUserLogin();
         if (!Piwik::doesUserRequirePasswordConfirmation($loginCurrentUser)) {
@@ -113,7 +115,7 @@ abstract class API
             // password confirmation disabled for user
         }
         if (empty($passwordConfirmation)) {
-            throw new Exception(Piwik::translate('UsersManager_ConfirmWithPassword'));
+            throw new Exception(Piwik::translate('UsersManager_ConfirmWithReAuthentication'));
         }
         try {
             if (!StaticContainer::get(PasswordVerifier::class)->isPasswordCorrect($loginCurrentUser, $passwordConfirmation)) {

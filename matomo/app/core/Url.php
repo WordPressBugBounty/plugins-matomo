@@ -147,14 +147,35 @@ class Url
                 $url = $_SERVER['argv'][0];
             }
         }
-        if (!isset($url[0]) || $url[0] !== '/') {
-            $url = '/' . $url;
-        }
         // A hash part should actually be never send to the server, as browsers automatically remove them from the request
         // The same happens for tools like cUrl. While Apache won't answer requests that contain them, Nginx would handle them
         // and the hash part would be included in REQUEST_URI. Therefor we always remove any hash parts here.
         if (mb_strpos($url, '#')) {
             $url = mb_substr($url, 0, mb_strpos($url, '#'));
+        }
+        // replace relative path references with absolute.
+        if (strlen($url) > 0) {
+            $urlSections = explode('/', $url);
+            $absoluteUrlComponents = [];
+            foreach ($urlSections as $section) {
+                if ($section === '.' || $section === '~') {
+                    continue;
+                }
+                if ($section === '..') {
+                    if (!empty($absoluteUrlComponents)) {
+                        array_pop($absoluteUrlComponents);
+                    }
+                    continue;
+                }
+                $absoluteUrlComponents[] = $section;
+            }
+            $url = implode('/', $absoluteUrlComponents);
+        }
+        // to handle instances of empty strings that don't appear at either end
+        // of the url, and creates double slashes in the resulting url.
+        $url = str_replace('//', '/', $url);
+        if (!str_starts_with($url, '/')) {
+            $url = '/' . $url;
         }
         return $url;
     }
@@ -214,7 +235,7 @@ class Url
         $trustedHosts = str_replace("/", "\\/", $trustedHosts);
         $untrustedHost = mb_strtolower($host);
         $untrustedHost = rtrim($untrustedHost, '.');
-        $hostRegex = mb_strtolower('/(^|\\.)' . implode('$|', $trustedHosts) . '$/');
+        $hostRegex = mb_strtolower('/(^|\\.)(' . implode('|', $trustedHosts) . ')$/');
         $result = preg_match($hostRegex, $untrustedHost);
         return 0 !== $result;
     }
@@ -257,7 +278,7 @@ class Url
      *
      * @param bool $checkIfTrusted Whether to do trusted host check. Should ALWAYS be true,
      *                             except in Controller.
-     * @return string|bool eg, `"demo.matomo.org"` or false if no host found.
+     * @return string|bool eg, `"demo.matomo.cloud"` or false if no host found.
      */
     public static function getHost($checkIfTrusted = \true)
     {
@@ -265,9 +286,13 @@ class Url
         if (strlen($host) && (!$checkIfTrusted || self::isValidHost($host))) {
             return $host;
         }
-        // HTTP/1.0 request doesn't include Host: header
-        if (isset($_SERVER['SERVER_ADDR'])) {
-            return $_SERVER['SERVER_ADDR'];
+        try {
+            $hosts = self::getTrustedHosts();
+            if (count($hosts) > 0) {
+                return $hosts[0];
+            }
+        } catch (\Exception $e) {
+            // fall back
         }
         return \false;
     }
@@ -709,7 +734,7 @@ class Url
      * @param string|null $medium   Optional campaign medium, defaults to App.[module].[action] where module and action are
      *                              taken from the currently viewed application page, eg. 'CoreAdminHome.trackingCodeGenerator'
      *
-     * @return string|null      www.matomo.org/faq/123?mtm_campaign=Matomo_App&mtm_source=Matomo_App_OnPremise&mtm_medium=App.CoreAdminHome.trackingCodeGenerator
+     * @return ($url is string ? string : null)      www.matomo.org/faq/123?mtm_campaign=Matomo_App&mtm_source=Matomo_App_OnPremise&mtm_medium=App.CoreAdminHome.trackingCodeGenerator
      */
     public static function addCampaignParametersToMatomoLink(?string $url = null, ?string $campaign = null, ?string $source = null, ?string $medium = null) : ?string
     {
@@ -736,9 +761,19 @@ class Url
             }
             $medium = 'App.' . $module . '.' . $action;
         }
-        $newParams = ['mtm_campaign' => $campaign ?? 'Matomo_App', 'mtm_source' => $source ?? 'Matomo_App_' . (\Piwik\Plugin\Manager::getInstance()->isPluginLoaded('Cloud') ? 'Cloud' : 'OnPremise'), 'mtm_medium' => $medium];
+        $newParams = ['mtm_campaign' => $campaign ?? 'Matomo_App', 'mtm_source' => $source ?? 'Matomo_App_' . (\Piwik\Plugin\Manager::getInstance()->isPluginActivated('Cloud') ? 'Cloud' : 'OnPremise'), 'mtm_medium' => $medium];
         // Add parameters to the link, overriding any existing campaign parameters while preserving the path and query string
         $pathAndQueryString = \Piwik\UrlHelper::getPathAndQueryFromUrl($url, $newParams, \true);
         return 'https://' . $domain . '/' . $pathAndQueryString;
+    }
+    /**
+     * Create an external link tag with optional campaign params if link goes to matomo.org
+     *
+     * @since 5.6.0
+     */
+    public static function getExternalLinkTag(string $url, ?string $campaign = null, ?string $source = null, ?string $medium = null) : string
+    {
+        $url = self::addCampaignParametersToMatomoLink($url, $campaign, $source, $medium);
+        return '<a target="_blank" rel="noreferrer noopener" href="' . $url . '">';
     }
 }

@@ -216,10 +216,8 @@ class GoalManager
     /**
      * Records one or several goals matched in this request.
      *
-     * @param Visitor $visitor
-     * @param array $visitorInformation
-     * @param array $visitCustomVariables
-     * @param Action $action
+     * @param VisitProperties $visitProperties
+     * @param Request $request
      */
     public function recordGoals(VisitProperties $visitProperties, \Piwik\Tracker\Request $request)
     {
@@ -269,10 +267,10 @@ class GoalManager
      * Records an Ecommerce conversion in the DB. Deals with Items found in the request.
      * Will deal with 2 types of conversions: Ecommerce Order and Ecommerce Cart update (Add to cart, Update Cart etc).
      *
+     * @param VisitProperties $visitProperties
+     * @param Request $request
      * @param array $conversion
-     * @param Visitor $visitor
-     * @param Action $action
-     * @param array $visitInformation
+     * @param Action|null $action
      */
     protected function recordEcommerceGoal(VisitProperties $visitProperties, \Piwik\Tracker\Request $request, $conversion, $action)
     {
@@ -561,10 +559,10 @@ class GoalManager
     /**
      * Records a standard non-Ecommerce goal in the DB (URL/Title matching),
      * linking the conversion to the action that triggered it
-     * @param $goal
-     * @param Visitor $visitor
-     * @param Action $action
-     * @param $visitorInformation
+     * @param VisitProperties $visitProperties
+     * @param Request $request
+     * @param array $goal
+     * @param Action|null $action
      */
     protected function recordStandardGoals(VisitProperties $visitProperties, \Piwik\Tracker\Request $request, $goal, $action)
     {
@@ -644,9 +642,15 @@ class GoalManager
         Common::printDebug($newGoalDebug);
         $idorder = $request->getParam('ec_id');
         $wasInserted = $this->getModel()->createConversion($conversion);
-        if (!$wasInserted && !empty($idorder)) {
-            $idSite = $request->getIdSite();
-            throw new InvalidRequestParameterException("Invalid non-unique idsite/idorder combination ({$idSite}, {$idorder}), conversion was not inserted.");
+        if (!$wasInserted) {
+            if (!empty($idorder)) {
+                $idSite = $request->getIdSite();
+                throw new InvalidRequestParameterException("Invalid non-unique idsite/idorder combination ({$idSite}, {$idorder}), conversion was not inserted.");
+            } elseif ($conversion['buster'] > 0) {
+                // Note: The buster is set to 0 for goals that can only be triggered once per visit.
+                // It's expected behaviour that creating additional conversion fail, so we don't log failures in that case.
+                StaticContainer::get(LoggerInterface::class)->warning("Failed to insert goal due to duplicate idvisit/idgoal/buster combination ({$conversion['idvisit']}, {$conversion['idgoal']}, {$conversion['buster']})");
+            }
         }
         return $wasInserted;
     }

@@ -56,7 +56,7 @@ class Controller extends \Piwik\Plugin\Controller
         if (\false !== $columns) {
             $columns = Piwik::getArrayFromApiParameter($columns);
         }
-        $documentation = $this->translator->translate('VisitsSummary_VisitsSummaryDocumentation') . '<br />' . $this->translator->translate('General_BrokenDownReportDocumentation') . '<br /><br />' . '<b>' . $this->translator->translate('General_ColumnNbVisits') . ':</b> ' . $this->translator->translate('General_ColumnNbVisitsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbUniqVisitors') . ':</b> ' . $this->translator->translate('General_ColumnNbUniqVisitorsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbActions') . ':</b> ' . $this->translator->translate('General_ColumnNbActionsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbUsers') . ':</b> ' . $this->translator->translate('General_ColumnNbUsersDocumentation') . ' (<a rel="noreferrer noopener" target="_blank" href="' . Url::addCampaignParametersToMatomoLink('https://matomo.org/docs/user-id/') . '">User ID</a>)<br />' . '<b>' . $this->translator->translate('General_ColumnActionsPerVisit') . ':</b> ' . $this->translator->translate('General_ColumnActionsPerVisitDocumentation');
+        $documentation = $this->translator->translate('VisitsSummary_VisitsSummaryDocumentation') . '<br />' . $this->translator->translate('General_BrokenDownReportDocumentation') . '<br /><br />' . '<b>' . $this->translator->translate('General_ColumnNbVisits') . ':</b> ' . $this->translator->translate('General_ColumnNbVisitsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbUniqVisitors') . ':</b> ' . $this->translator->translate('General_ColumnNbUniqVisitorsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbActions') . ':</b> ' . $this->translator->translate('General_ColumnNbActionsDocumentation') . '<br />' . '<b>' . $this->translator->translate('General_ColumnNbUsers') . ':</b> ' . $this->translator->translate('General_ColumnNbUsersDocumentation') . ' (' . Url::getExternalLinkTag('https://matomo.org/docs/user-id/') . 'User ID</a>)<br />' . '<b>' . $this->translator->translate('General_ColumnActionsPerVisit') . ':</b> ' . $this->translator->translate('General_ColumnActionsPerVisitDocumentation');
         $selectableColumns = array(
             // columns from VisitsSummary.get
             'nb_visits',
@@ -68,6 +68,7 @@ class Controller extends \Piwik\Plugin\Controller
             'max_actions',
             'nb_visits_converted',
             // columns from Actions.get
+            'hits',
             'nb_pageviews',
             'nb_uniq_pageviews',
             'nb_downloads',

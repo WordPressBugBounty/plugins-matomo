@@ -312,6 +312,7 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
      * @var int
      */
     protected $maximumAllowedRows = 0;
+    protected $isBuiltWithoutArchives = \true;
     /**
      * Constructor. Creates an empty DataTable.
      */
@@ -838,7 +839,7 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     /**
      * Returns an array containing all column values for the requested column.
      *
-     * @param string $name The column name.
+     * @param string|int $name The column name.
      * @return array The array of column values.
      */
     public function getColumn($name)
@@ -1569,7 +1570,7 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
     /**
      * Sets metadata, erasing existing values.
      *
-     * @param array $values Array mapping metadata names with metadata values.
+     * @param array $metadata Array mapping metadata names with metadata values.
      */
     public function setAllTableMetadata($metadata)
     {
@@ -1859,5 +1860,13 @@ class DataTable implements DataTableInterface, \IteratorAggregate, \ArrayAccess
             $existingRow->sumRow($tableRow, \true, $aggregationOps);
         }
         return $existingRow;
+    }
+    public function setAsBuiltWithoutArchives(bool $flag) : void
+    {
+        $this->isBuiltWithoutArchives = $flag;
+    }
+    public function wasBuiltWithoutArchives() : bool
+    {
+        return $this->isBuiltWithoutArchives;
     }
 }

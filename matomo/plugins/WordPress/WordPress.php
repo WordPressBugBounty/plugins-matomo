@@ -10,6 +10,7 @@
 namespace Piwik\Plugins\WordPress;
 
 use Exception;
+use Piwik\Access;
 use Piwik\API\Request;
 use Piwik\Common;
 use Piwik\Config;
@@ -73,7 +74,28 @@ class WordPress extends Plugin
             'Visualization.beforeRender' => 'onBeforeRenderView',
             'AssetManager.getStylesheetFiles'  => 'getStylesheetFiles',
             'Controller.CorePluginsAdmin.safemode.end' => 'modifySafemodeHtml',
+            'Tracker.setTrackerCacheGeneral' => ['function' => 'setTrackerCacheGeneral', 'after' => true],
+            'Platform.initialized' => ['function' => 'onPlatformInitialized', 'before' => true],
         );
+    }
+
+    public function onPlatformInitialized()
+    {
+        // set language to WordPress locale
+        if (is_admin()) {
+            $languageCookieName = Config::getInstance()->General['language_cookie_name'];
+
+            $locale = get_user_locale();
+            $_COOKIE[$languageCookieName] = WpMatomo\User\Sync::get_matomo_lang_from_locale($locale);
+        }
+    }
+
+    public function setTrackerCacheGeneral(&$cache)
+    {
+        $settings = WpMatomo::$settings ?: new Settings();
+        Access::doAsSuperUser(function () use(&$cache, $settings) { // see SitesManager::setTrackerCacheGeneral
+            $cache['global_excluded_user_agents'] = $settings->get_global_user_agent_exclusions();
+        });
     }
 
     public function allowUpdateSiteForMeasurableSettings($finalParameters)

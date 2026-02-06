@@ -427,11 +427,6 @@ enable_sql_optimize_queries = 1
 ; you can prevent this action from happening by setting this parameter to value bigger than 1
 purge_date_range_archives_after_X_days = 1
 
-; MySQL minimum required version
-; note: timezone support added in 4.1.3
-minimum_mysql_version = 4.1
-
-
 ; Minimum advised memory limit in Mb in php.ini file (see memory_limit value)
 ; Set to "-1" to always use the configured memory_limit value in php.ini file.
 minimum_memory_limit = 128
@@ -560,6 +555,20 @@ enable_framed_allow_write_admin_token_auth = 0
 ; will be created for Secure use only, and previously created tokens will only be accepted in a secure way (POST requests).
 ; Recommended for best security.
 only_allow_secure_auth_tokens = 0
+
+; Number of days after which a personal auth token is recommended to be rotated and an email notification will be sent to the user.
+; If set to 0 days, notifications won't be sent.
+; Recommended to keep enabled for best security.
+auth_token_rotation_notification_days = 180
+
+; Number of days that will be added to 'today' to preset an expiration date when a new auth token is being created
+; For example, if a user starts creating an auth token on 1 May 2025, the expiry date will be preset to 1 November 2025.
+auth_token_default_expiration_days = 180
+
+; Number of days before the expiration date of a personal auth token, where an email notification is sent to the user.
+; If set to 0 days, notifications won't be sent. 
+; Recommended to keep enabled for best security.
+auth_token_expiration_notification_days = 30
 
 ; language cookie name for session
 language_cookie_name = matomo_lang
@@ -903,6 +912,11 @@ enable_referrer_definition_syncs = 1
 ; so it can be disabled here if necessary.
 disable_tracking_matomo_app_links = 0
 
+; Compression level used in ArchiveWriter when creating blob archives
+; Valid values are 0 for no compression up to 9 for maximum compression. If -1 is used, the default compression of the zlib library (level 6) is used.
+; Change with caution as using a higher compression may decrease archiving performance.
+archive_blob_compression_level = -1
+
 [Tracker]
 
 ; When enabled and a userId is set, then the visitorId will be automatically set based on the userId. This allows to
@@ -977,7 +991,7 @@ default_time_one_page_visit = 0
 
 ; Comma separated list of URL query string variable names that will be removed from your tracked URLs
 ; By default, Matomo will remove the most common parameters which are known to change often (eg. session ID parameters)
-url_query_parameter_to_exclude_from_url = "gclid,fbclid,msclkid,twclid,wbraid,gbraid,yclid,fb_xd_fragment,fb_comment_id,phpsessid,jsessionid,sessionid,aspsessionid,doing_wp_cron,sid,pk_vid"
+url_query_parameter_to_exclude_from_url = "gclid,fbclid,msclkid,twclid,wbraid,gbraid,yclid,fb_xd_fragment,fb_comment_id,phpsessid,jsessionid,sessionid,aspsessionid,doing_wp_cron,sid,pk_vid,li_fat_id"
 
 ; If set to 1, Matomo will use the default provider if no other provider is configured.
 ; In addition the default provider will be used as a fallback when the configure provider does not return any results.
@@ -1280,6 +1294,7 @@ Plugins[] = PagePerformance
 Plugins[] = CustomDimensions
 Plugins[] = JsTrackerInstallCheck
 Plugins[] = FeatureFlags
+Plugins[] = AIAgents
 
 [PluginsInstalled]
 PluginsInstalled[] = Diagnostics

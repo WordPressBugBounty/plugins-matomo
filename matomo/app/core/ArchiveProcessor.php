@@ -224,8 +224,8 @@ class ArchiveProcessor
      * as metrics for the current period.
      *
      * @param array|string $columns Array of metric names to aggregate.
-     * @param bool|string|string[] $operationToApply The operation to apply to the metric. Either `'sum'`, `'max'` or `'min'`.
-     *                                               Can also be an array mapping record names to operations.
+     * @param string|string[]|false $operationsToApply The operation to apply to the metric. Either `'sum'`, `'max'` or `'min'`.
+     *                                                Can also be an array mapping record names to operations.
      * @return array|int Returns the array of aggregate values. If only one metric was aggregated,
      *                   the aggregate value will be returned as is, not in an array.
      *                   For example, if `array('nb_visits', 'nb_hits')` is supplied for `$columns`,
@@ -346,7 +346,7 @@ class ArchiveProcessor
             $tableId = $archiveDataRow['name'] == $name ? null : $this->getSubtableIdFromBlobName($archiveDataRow['name']);
             $blobTable = \Piwik\DataTable::fromSerializedArray($archiveDataRow['value']);
             // see https://github.com/piwik/piwik/issues/4377
-            $blobTable->filter(function ($table) use($columnsToRenameAfterAggregation, $name) {
+            $blobTable->filter(function ($table) use($columnsToRenameAfterAggregation) {
                 if ($this->areColumnsNotAlreadyRenamed($table)) {
                     /**
                      * This makes archiving and range dates a lot faster. Imagine we archive a week, then we will
@@ -587,6 +587,9 @@ class ArchiveProcessor
         }
         $operationForColumn = $this->getOperationForColumns($columns, $operationsToApply);
         $dataTable = $this->getArchive()->getDataTableFromNumeric($columns);
+        if ($dataTable->wasBuiltWithoutArchives()) {
+            return (new Row())->getColumns();
+        }
         $results = $this->getAggregatedDataTableMap($dataTable, $operationForColumn);
         if ($results->getRowsCount() > 1) {
             throw new Exception("A DataTable is an unexpected state:" . var_export($results, \true));

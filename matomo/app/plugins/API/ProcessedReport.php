@@ -639,14 +639,14 @@ class ProcessedReport
     }
     private function buildReportMetadataCacheKey($idSite, $period, $date, $hideMetricsDoc, $showSubtableReports)
     {
-        if (isset($_GET) && isset($_POST) && is_array($_GET) && is_array($_POST)) {
+        if (is_array($_GET) && is_array($_POST)) {
             $request = $_GET + $_POST;
-        } elseif (isset($_GET) && is_array($_GET)) {
+        } elseif (is_array($_GET)) {
             $request = $_GET;
-        } elseif (isset($_POST) && is_array($_POST)) {
+        } elseif (is_array($_POST)) {
             $request = $_POST;
         } else {
-            $request = array();
+            $request = [];
         }
         $key = '';
         foreach ($request as $k => $v) {
@@ -679,7 +679,6 @@ class ProcessedReport
      * @param int $idSite The ID of the site the metric is for (used if the column value is an amount of money).
      * @param string $columnName The metric name.
      * @param mixed $value The metric value.
-     * @param bool $isHtml If true, replaces all spaces with `'&nbsp;'`.
      * @return string
      */
     public static function getPrettyValue(Formatter $formatter, $idSite, $columnName, $value)

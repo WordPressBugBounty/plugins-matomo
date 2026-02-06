@@ -91,7 +91,7 @@ class VisitRequestProcessor extends RequestProcessor
         if ($isExcluded) {
             return \true;
         }
-        $privacyConfig = new PrivacyManagerConfig();
+        $privacyConfig = new PrivacyManagerConfig($request->getIdSiteIfExists());
         if ($privacyConfig->randomizeConfigId) {
             // always new visit when randomising config id
             $request->setMetadata('CoreHome', 'visitorId', $this->userSettings->getRandomConfigId());
@@ -128,8 +128,9 @@ class VisitRequestProcessor extends RequestProcessor
          * This event is primarily used by the **PrivacyManager** plugin to anonymize IP addresses.
          *
          * @param string &$ip The visitor's IP address.
+         * @param int $idSite The site ID we're tracking the visit for.
          */
-        $this->eventDispatcher->postEvent('Tracker.setVisitorIp', array(&$ip));
+        $this->eventDispatcher->postEvent('Tracker.setVisitorIp', [&$ip, (int) $request->getIdSiteIfExists()]);
         $visitProperties->setProperty('location_ip', $ip);
         return \false;
     }
@@ -170,7 +171,7 @@ class VisitRequestProcessor extends RequestProcessor
             Common::printDebug("Visitor detected, but last action was yesterday...");
             return \true;
         }
-        if (!TrackerConfig::getConfigValue('enable_userid_overwrites_visitorid', $request->getIdSiteIfExists()) && !$this->lastUserIdWasSetAndDoesMatch($visitProperties, $request)) {
+        if (!$this->lastUserIdWasSetAndDoesMatch($visitProperties, $request)) {
             Common::printDebug("Visitor detected, but last user_id does not match...");
             return \true;
         }
@@ -187,7 +188,7 @@ class VisitRequestProcessor extends RequestProcessor
     }
     /**
      * Returns true if the last action was not today.
-     * @param VisitProperties $visitor
+     * @param VisitProperties $visitProperties
      * @return bool
      */
     private function wasLastActionNotToday(VisitProperties $visitProperties, Request $request, $lastKnownVisit)

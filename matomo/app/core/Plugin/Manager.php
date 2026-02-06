@@ -269,7 +269,7 @@ class Manager
     /**
      * Returns `true` if plugin is loaded (in memory).
      *
-     * @param string $name Name of plugin, eg, `'Acions'`.
+     * @param string $name Name of plugin, eg, `'Actions'`.
      * @return bool
      * @api
      */
@@ -525,6 +525,12 @@ class Manager
         }
         return $components;
     }
+    /**
+     * @template T of object
+     * @param string $directoryWithinPlugin
+     * @param class-string<T> $expectedSubclass
+     * @return array<class-string<T>>
+     */
     public function findMultipleComponents($directoryWithinPlugin, $expectedSubclass)
     {
         $plugins = $this->getPluginsLoadedAndActivated();
@@ -655,13 +661,13 @@ class Manager
      *
      * If no theme is enabled, the **Morpheus** plugin is returned (this is the base and default theme).
      *
-     * @return Plugin
+     * @return Plugin|null
      * @api
      */
-    public function getThemeEnabled()
+    public function getThemeEnabled() : ?Plugin
     {
         $plugins = $this->getLoadedPlugins();
-        $theme = \false;
+        $theme = null;
         foreach ($plugins as $plugin) {
             /* @var $plugin Plugin */
             if ($plugin->isTheme() && $this->isPluginActivated($plugin->getPluginName())) {

@@ -12,6 +12,7 @@ use Piwik\Config as PiwikConfig;
 use Piwik\Config;
 use Piwik\Container\StaticContainer;
 use Piwik\Date;
+use Piwik\Db\Schema;
 use Piwik\Development;
 use Piwik\Exception\MissingFilePermissionException;
 use Piwik\Menu\MenuAdmin;
@@ -131,7 +132,7 @@ abstract class ControllerAdmin extends \Piwik\Plugin\Controller
         }
         $message = Piwik::translate('General_CurrentlyUsingUnsecureHttp');
         $message .= " ";
-        $message .= Piwik::translate('General_ReadThisToLearnMore', ['<a rel="noreferrer noopener" target="_blank" href="' . Url::addCampaignParametersToMatomoLink('https://matomo.org/faq/how-to/faq_91/') . '">', '</a>']);
+        $message .= Piwik::translate('General_ReadThisToLearnMore', [Url::getExternalLinkTag('https://matomo.org/faq/how-to/faq_91/'), '</a>']);
         $notification = new Notification($message);
         $notification->context = Notification::CONTEXT_WARNING;
         $notification->raw = \true;
@@ -233,6 +234,27 @@ abstract class ControllerAdmin extends \Piwik\Plugin\Controller
         $notification->flags = Notification::FLAG_NO_CLEAR;
         NotificationManager::notify('PHPVersionCheck', $notification);
     }
+    private static function notifyWhenDatabaseVersionIsEOL() : void
+    {
+        if (defined('PIWIK_TEST_MODE')) {
+            // to avoid changing every admin UI test
+            return;
+        }
+        $isEOL = Piwik::hasUserSuperUserAccess() && Schema::getInstance()->hasReachedEOL();
+        if (!$isEOL) {
+            return;
+        }
+        $databaseVersion = Schema::getInstance()->getVersion();
+        $message = Piwik::translate('General_WarningDatabaseVersionXIsTooOld', [Schema::getInstance()->getDatabaseType(), $databaseVersion]);
+        $notification = new Notification($message);
+        $notification->raw = \true;
+        $notification->title = Piwik::translate('General_Warning');
+        $notification->priority = Notification::PRIORITY_LOW;
+        $notification->context = Notification::CONTEXT_WARNING;
+        $notification->type = Notification::TYPE_TRANSIENT;
+        $notification->flags = Notification::FLAG_NO_CLEAR;
+        NotificationManager::notify('DatabaseVersionCheck', $notification);
+    }
     private static function notifyWhenDebugOnDemandIsEnabled($trackerSetting)
     {
         if (!Development::isEnabled() && Piwik::hasUserSuperUserAccess() && TrackerConfig::getConfigValue($trackerSetting)) {
@@ -287,6 +309,7 @@ abstract class ControllerAdmin extends \Piwik\Plugin\Controller
         self::notifyAnyInvalidPlugin();
         self::notifyWhenPhpVersionIsEOL();
         self::notifyWhenPhpVersionIsNotCompatibleWithNextMajorPiwik();
+        self::notifyWhenDatabaseVersionIsEOL();
         self::notifyWhenDebugOnDemandIsEnabled('debug');
         self::notifyWhenDebugOnDemandIsEnabled('debug_on_demand');
         /**
