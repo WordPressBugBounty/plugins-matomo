@@ -12,6 +12,7 @@ use Exception;
 use Piwik\Access\CapabilitiesProvider;
 use Piwik\API\Request;
 use Piwik\Access\RolesProvider;
+use Piwik\Http\BadRequestException;
 use Piwik\Request\AuthenticationToken;
 use Piwik\Container\StaticContainer;
 use Piwik\Plugins\SitesManager\API as SitesManagerApi;
@@ -71,6 +72,10 @@ class Access
      * @var Auth
      */
     private $auth = null;
+    /**
+     * @var bool
+     */
+    private $sessionExpired = \false;
     /**
      * Gets the singleton instance. Creates it if necessary.
      *
@@ -527,16 +532,16 @@ class Access
     /**
      * @param int|array|string $idSites
      * @return array
-     * @throws \Piwik\NoAccessException
+     * @throws BadRequestException
      */
     protected function getIdSites($idSites)
     {
-        if ($idSites === 'all') {
+        if ($idSites === 'all' || $idSites === ['all']) {
             $idSites = $this->getSitesIdWithAtLeastViewAccess();
         }
-        $idSites = \Piwik\Site::getIdSitesFromIdSitesString($idSites);
+        $idSites = \Piwik\Site::getIdSitesFromIdSitesString($idSites, \false, \true);
         if (empty($idSites)) {
-            $this->throwNoAccessException("The parameter 'idSite=' is missing from the request.");
+            throw new BadRequestException("The parameter 'idSite=' is missing from the request.");
         }
         return $idSites;
     }
@@ -626,14 +631,19 @@ class Access
     {
         if (\Piwik\Piwik::isUserIsAnonymous() && !Request::isRootRequestApiRequest()) {
             $message = \Piwik\Piwik::translate('General_YouMustBeLoggedIn');
-            // Try to detect whether user was previously logged in so that we can display a different message
-            $referrer = \Piwik\Url::getReferrer();
-            $matomoUrl = \Piwik\SettingsPiwik::getPiwikUrl();
-            if ($referrer && $matomoUrl && \Piwik\Url::isValidHost(\Piwik\Url::getHostFromUrl($referrer)) && strpos($referrer, $matomoUrl) === 0) {
+            if ($this->sessionExpired) {
                 $message = \Piwik\Piwik::translate('General_YourSessionHasExpired');
             }
         }
         throw new \Piwik\NoAccessException($message);
+    }
+    public function setSessionExpired(bool $sessionExpired) : void
+    {
+        $this->sessionExpired = $sessionExpired;
+    }
+    public function wasSessionExpired() : bool
+    {
+        return $this->sessionExpired;
     }
     /**
      * Returns true if the current user is logged in or not.

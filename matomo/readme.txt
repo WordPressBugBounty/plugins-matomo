@@ -1,9 +1,9 @@
 === Matomo Analytics - Ethical Stats. Powerful Insights. ===
 Contributors: matomoteam
-Tags: matomo,analytics,statistics,stats,ecommerce
+Tags: analytics,privacy-friendly,gdpr,behavior,conversion,wordpress analytics,google analytics,woocommerce analytics,matomo,statistics,stats,ecommerce
 Requires at least: 4.8
-Tested up to: 6.9.0
-Stable tag: 5.6.1
+Tested up to: 6.9.1
+Stable tag: 5.7.0
 Requires PHP: 7.2.5
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html

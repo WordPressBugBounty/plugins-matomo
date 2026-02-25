@@ -162,7 +162,7 @@ table.matomo-tracking-form th {
     transform: translateX(1.03em);
 }
 
-#toplevel_page_matomo a {
+#toplevel_page_matomo a.matomo-notification-dot {
     position: relative;
     display: inline-block;
 }
@@ -175,7 +175,7 @@ table.matomo-tracking-form th {
     height: 6px;
     background-color: #d63638;
     border-radius: 50%;
-    right: 4px;
+    right: 2px;
 }
 
 .notice.matomo-whats-new {
@@ -214,4 +214,12 @@ table.matomo-tracking-form th {
 .plugin-price {
     font-weight: bold;
     color: #f77b00;
+}
+
+.matomo-inline-notice {
+    padding: 1em;
+}
+
+.matomo-inline-notice.matomo-warning {
+    background-color: rgba(255, 165, 0, 0.2);
 }

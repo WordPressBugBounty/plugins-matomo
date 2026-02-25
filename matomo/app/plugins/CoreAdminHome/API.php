@@ -145,7 +145,7 @@ class API extends \Piwik\Plugin\API
      */
     public function invalidateArchivedReports($idSites, $dates, $period = \false, $segment = \false, $cascadeDown = \false, $_forceInvalidateNonexistent = \false)
     {
-        $idSites = Site::getIdSitesFromIdSitesString($idSites);
+        $idSites = Site::getIdSitesFromIdSitesString($idSites, \false, \true);
         if (empty($idSites)) {
             throw new Exception("Specify a value for &idSites= as a comma separated list of website IDs, for which your token_auth has 'admin' permission");
         }
@@ -201,9 +201,8 @@ class API extends \Piwik\Plugin\API
      * @param int $idSite
      * @param int $idFailure
      */
-    public function deleteTrackingFailure($idSite, $idFailure)
+    public function deleteTrackingFailure(int $idSite, $idFailure)
     {
-        $idSite = (int) $idSite;
         Piwik::checkUserHasAdminAccess($idSite);
         $this->trackingFailures->deleteTrackingFailure($idSite, $idFailure);
     }
@@ -235,7 +234,7 @@ class API extends \Piwik\Plugin\API
      * @throws \Piwik\Exception\UnexpectedWebsiteFoundException
      * @internal
      */
-    public function archiveReports($idSite, $period, $date, $segment = \false, $plugin = \false, $report = \false)
+    public function archiveReports(int $idSite, $period, $date, $segment = \false, $plugin = \false, $report = \false)
     {
         if (\Piwik\API\Request::getRootApiRequestMethod() === 'CoreAdminHome.archiveReports') {
             Piwik::checkUserHasSuperUserAccess();
@@ -247,16 +246,37 @@ class API extends \Piwik\Plugin\API
         $invalidateBeforeArchiving = !$isArchivePhpTriggered;
         $period = Factory::build($period, $date);
         $site = new Site($idSite);
-        $parameters = new ArchiveProcessor\Parameters($site, $period, new Segment($segment, [$idSite], $period->getDateTimeStart()->setTimezone($site->getTimezone()), $period->getDateTimeEnd()->setTimezone($site->getTimezone())));
+        $segmentObj = new Segment($segment, [$idSite], $period->getDateTimeStart()->setTimezone($site->getTimezone()), $period->getDateTimeEnd()->setTimezone($site->getTimezone()));
+        $parameters = new ArchiveProcessor\Parameters($site, $period, $segmentObj);
         if ($report) {
             $parameters->setArchiveOnlyReport($report);
         }
+        /**
+         * Triggered before a full archiveReports run starts.
+         *
+         * Usage example:
+         * Piwik::addAction('CoreAdminHome.archiveReports.start', function ($idSite, $period, $segment, $plugin, $report, $isArchivePhpTriggered) { ... });
+         *
+         * @internal
+         */
+        Piwik::postEvent('CoreAdminHome.archiveReports.start', [$idSite, $period, $segmentObj, (string) $plugin, $report, $isArchivePhpTriggered]);
         // TODO: need to test case when there are multiple plugin archives w/ only some data each. does purging remove some that we need?
         $archiveLoader = new ArchiveProcessor\Loader($parameters, $invalidateBeforeArchiving);
         $result = $archiveLoader->prepareArchive($plugin);
         if (!empty($result)) {
             $result = ['idarchives' => $result[0], 'nb_visits' => $result[1]];
         }
+        $idArchives = isset($result['idarchives']) ? (array) $result['idarchives'] : [];
+        $wasCached = $archiveLoader->didReuseArchive();
+        /**
+         * Triggered after a full archiveReports run completes.
+         *
+         * Usage example:
+         * Piwik::addAction('CoreAdminHome.archiveReports.complete', function ($idSite, $period, $segment, $plugin, $report, $isArchivePhpTriggered, $idArchives, $wasCached) { ... });
+         *
+         * @internal
+         */
+        Piwik::postEvent('CoreAdminHome.archiveReports.complete', [$idSite, $period, $segmentObj, (string) $plugin, $report, $isArchivePhpTriggered, $idArchives, $wasCached]);
         return $result;
     }
     /**

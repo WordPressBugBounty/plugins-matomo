@@ -85,7 +85,7 @@ class API extends \Piwik\Plugin\API
         if (!Manager::getInstance()->isPluginActivated('Live')) {
             return [];
         }
-        $siteIds = Site::getIdSitesFromIdSitesString($idSite);
+        $siteIds = Site::getIdSitesFromIdSitesString($idSite, \false, \true);
         $siteIdsWithVisitorLogsOrProfilesEnabled = [];
         /*
          * Only retrieve data from sites that have visitor logs or profiles enabled.
@@ -93,6 +93,9 @@ class API extends \Piwik\Plugin\API
          * are disabled.
          */
         foreach ($siteIds as $siteId) {
+            if (!Piwik::isUserHasViewAccess($siteId)) {
+                continue;
+            }
             $isVisitorProfileEnabled = Live::isVisitorProfileEnabled($siteId);
             if ($isVisitorProfileEnabled) {
                 $siteIdsWithVisitorLogsOrProfilesEnabled[] = $siteId;
@@ -121,7 +124,7 @@ $passwordConfirmation = '')
             $idSites = null;
             // all websites
         } else {
-            $idSites = Site::getIdSitesFromIdSitesString($idSites);
+            $idSites = Site::getIdSitesFromIdSitesString($idSites, \false, \true);
         }
         $requester = Piwik::getCurrentUserLogin();
         $this->logDataAnonymizations->scheduleEntry($requester, $idSites, $date, $anonymizeIp, $anonymizeLocation, $anonymizeUserId, $unsetVisitColumns, $unsetLinkVisitActionColumns);
@@ -272,7 +275,9 @@ string $passwordConfirmation = '')
     /**
      * @internal
      */
-    public function setScheduleReportDeletionSettings($deleteLowestInterval = 7, $passwordConfirmation = '')
+    public function setScheduleReportDeletionSettings($deleteLowestInterval = 7,
+#[\SensitiveParameter]
+$passwordConfirmation = '')
     {
         Piwik::checkUserHasSuperUserAccess();
         $this->confirmCurrentUserPassword($passwordConfirmation);
@@ -281,7 +286,9 @@ string $passwordConfirmation = '')
     /**
      * @internal
      */
-    public function setDeleteLogsSettings($enableDeleteLogs = '0', $deleteLogsOlderThan = 180, $passwordConfirmation = '')
+    public function setDeleteLogsSettings($enableDeleteLogs = '0', $deleteLogsOlderThan = 180,
+#[\SensitiveParameter]
+$passwordConfirmation = '')
     {
         Piwik::checkUserHasSuperUserAccess();
         $this->confirmCurrentUserPassword($passwordConfirmation);
@@ -385,7 +392,9 @@ $passwordConfirmation)
     /**
      * @internal
      */
-    public function setComplianceStatus(string $idSite, string $complianceType, bool $enforce, string $passwordConfirmation = null) : bool
+    public function setComplianceStatus(string $idSite, string $complianceType, bool $enforce,
+#[\SensitiveParameter]
+?string $passwordConfirmation = null) : bool
     {
         if (!$this->featureFlagManager->isFeatureActive(PrivacyCompliance::class)) {
             throw new Exception('Feature not available');

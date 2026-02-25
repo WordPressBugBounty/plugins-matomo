@@ -113,6 +113,7 @@ class API extends \Piwik\Plugin\API
     /**
      * Returns the section [APISettings] if defined in config.ini.php
      * @return array
+     * @deprecated May be removed in one of the next major releases
      */
     public function getSettings()
     {
@@ -142,7 +143,7 @@ class API extends \Piwik\Plugin\API
         if (empty($idSites)) {
             Piwik::checkUserHasSomeViewAccess();
         } else {
-            $idSites = Site::getIdSitesFromIdSitesString($idSites);
+            $idSites = Site::getIdSitesFromIdSitesString($idSites, \false, \true);
             Piwik::checkUserHasViewAccess($idSites);
         }
         $isNotAnonymous = !Piwik::isUserIsAnonymous();
