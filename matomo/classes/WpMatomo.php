@@ -41,7 +41,7 @@ use WpMatomo\User\Sync as UserSync;
 
 class WpMatomo {
 
-	const VERSION = '5.7.1';
+	const VERSION = '5.8.0';
 
 	/**
 	 * @var Settings
@@ -162,6 +162,8 @@ class WpMatomo {
 		// TODO: need better way of doing ajax?
 		MarketplaceSetupWizard::register_ajax();
 		WpMatomo\Admin\TrackingSettings::register_ajax();
+
+		\WpMatomo\Admin\GetStarted::register_hooks();
 	}
 
 	private function check_compatibility() {
