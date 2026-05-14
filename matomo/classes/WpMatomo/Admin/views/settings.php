@@ -22,9 +22,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /** @var Settings $matomo_settings */
 
 if ( $matomo_settings->is_network_enabled() && is_network_admin() ) {
-	echo '<div class="notice notice-info is-dismissible"><br>You are running Matomo in network mode. This means below settings will be applied to all blogs in your network.<br><br></div>';
+	echo '<div class="matomo-notice notice notice-info is-dismissible"><br>You are running Matomo in network mode. This means below settings will be applied to all blogs in your network.<br><br></div>';
 } elseif ( $matomo_settings->is_network_enabled() && ! is_network_admin() ) {
-	echo '<div class="notice notice-info is-dismissible"><br>';
+	echo '<div class="matomo-notice notice notice-info is-dismissible"><br>';
 	esc_html_e( 'You are running Matomo in network mode.', 'matomo' );
 	echo ' ';
 	echo 'Below settings aren\'t applied for all blogs but have to be configured for each blog separately. We are hoping to improve this in the future. Any setting within the Matomo admin is configured on a per blog basis as well. Only you as a Matomo super user can see these settings.<br><br></div>';
@@ -41,7 +41,7 @@ if ( $matomo_settings->is_network_enabled() && is_network_admin() ) {
 	if ( current_user_can( Capabilities::KEY_SUPERUSER )
 		 && ! is_network_admin() ) {
 		?>
-		<a href="<?php echo esc_url( Menu::get_matomo_goto_url( Menu::REPORTING_GOTO_ADMIN ) ); ?>" class="nav-tab"
+		<a href="<?php echo esc_url( Menu::get_matomo_goto_url( Menu::REPORTING_GOTO_ADMIN ) ); ?>" target="_blank" class="nav-tab"
 		><?php esc_html_e( 'Matomo Admin', 'matomo' ); ?> <span class="dashicons-before dashicons-external"></span></a>
 
 		<?php

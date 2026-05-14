@@ -4,10 +4,10 @@
  * Description: Privacy friendly, GDPR compliant and self-hosted. Matomo is the #1 Google Analytics alternative that gives you control of your data. Free and secure.
  * Author: Matomo
  * Author URI: https://matomo.org
- * Version: 5.8.2
+ * Version: 5.10.0
  * Domain Path: /languages
  * WC requires at least: 2.4.0
- * WC tested up to: 10.6.2
+ * WC tested up to: 10.7.0
  *
  * Matomo - free/libre analytics platform
  *
@@ -104,11 +104,13 @@ function matomo_has_compatible_content_dir() {
 }
 
 function matomo_header_icon( $full = false ) {
-	$file = 'logo';
+	$class = 'matomo-header-icon';
+	$file  = 'logo.png';
 	if ( $full ) {
-		$file = 'logo-full';
+		$file   = 'logo-full.png';
+		$class .= '-full';
 	}
-	echo '<img height="32" src="' . esc_url( plugins_url( 'assets/img/' . $file . '.png', MATOMO_ANALYTICS_FILE ) ) . '" class="matomo-header-icon">';
+	echo '<img height="32" src="' . esc_url( plugins_url( 'assets/img/' . $file, MATOMO_ANALYTICS_FILE ) . '?v=' . rawurlencode( matomo_get_asset_version() ) ) . '" class="' . esc_attr( $class ) . '">';
 }
 
 function matomo_is_app_request() {
@@ -292,6 +294,12 @@ function matomo_add_plugin( $plugins_directory, $wp_plugin_file, $is_marketplace
 		'pluginsPathAbsolute'        => $root_dir,
 		'webrootDirRelativeToMatomo' => $webroot_dir,
 	);
+}
+
+function matomo_get_asset_version() {
+	$version = \WpMatomo::VERSION;
+	$version = apply_filters( 'matomo_asset_version', $version );
+	return $version;
 }
 
 if ( matomo_is_app_request() || ! empty( $GLOBALS['MATOMO_LOADED_DIRECTLY'] ) ) {
